@@ -49,4 +49,18 @@ export const gamesConfig: GamesConfig = withUserConfig("games", {
 		},
 	],
 	// disabledIds: [],
+	source: { kind: "snapshot", provider: "bangumi" },
+	fallback: { kind: "local" },
+	providers: {
+		bangumi: {
+			enable: true,
+			userId: "965119",
+			request: { pageSize: 50, maxItems: 300, minDelayMs: 1500 },
+		},
+	},
+	snapshot: {
+		directory: "src/data/games-snapshots",
+		staleAfterDays: 30,
+		keepLastValid: true,
+	},
 });

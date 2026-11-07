@@ -347,6 +347,9 @@ export const id: Translation = {
 	[Key.feedHowToUseDesc]:
 		"Tambahkan URL umpan di atas ke pembaca RSS/Atom favorit Anda (seperti NetNewsWire, Feedly, Inoreader, Follow) untuk menerima pembaruan.",
 	[Key.feedOpenXml]: "Lihat XML Asli",
+	[Key.postSignature]: "Tanda tangan",
+	[Key.postSignedBy]: "Ditandatangani oleh {shortId}",
+	[Key.rawMarkdown]: "Markdown mentah",
 	[Key.feedRecentPosts]: "Artikel Terbaru di Umpan",
 	[Key.menu]: "Menu",
 	[Key.mainNavigation]: "Navigasi utama",

@@ -1,6 +1,7 @@
 ---
 import { Font } from "astro:assets";
 import Snackbar from "@components/atoms/overlay/Snackbar.svelte";
+import Live2D from "@components/features/live2d/Live2D.svelte";
 import ConfigCarrier from "@components/system/ConfigCarrier.astro";
 import UmamiRuntime from "@components/system/UmamiRuntime.astro";
 import { resolveAsset } from "@utils/asset-utils";
@@ -11,9 +12,11 @@ import {
 	profileConfig,
 	resolvedFontOptions,
 	resolveTextureOptions,
+	resolveLive2DOptions,
 	resolveUmamiOptions,
 	siteConfig,
 	umamiConfig,
+	live2dConfig,
 } from "@/config";
 import type { SidebarPage } from "@/types/sidebarConfig";
 import {
@@ -91,6 +94,7 @@ const defaultTexturePreset = textureOptions.defaultPreset;
 const defaultTextureOpacity = textureOptions.defaultOpacity;
 const textureEnabled = textureOptions.enable;
 const umamiOptions = resolveUmamiOptions(umamiConfig);
+const live2dOptions = resolveLive2DOptions(live2dConfig);
 
 const hasDesktopBanner = hasBannerImages(siteConfig.banner.src.desktop);
 const hasMobileBanner = hasBannerImages(siteConfig.banner.src.mobile);
@@ -242,6 +246,9 @@ const defaultSchemeStyle = createDefaultSchemeStyle();
 			></div>
 		)}
 		<Snackbar client:only="svelte"></Snackbar>
+		{live2dOptions && Live2D && (
+			<Live2D client:visible options={live2dOptions} />
+		)}
 		<slot />
 		<div id="page-height-extend" class="hidden h-[300vh]"></div>
 	</body>

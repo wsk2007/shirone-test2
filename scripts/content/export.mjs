@@ -120,6 +120,7 @@ const SKIPPED_DIRECTORIES = new Set([
 const EXPORT_PROTECTED_PATHS = Object.freeze([
 	...PROTECTED_PATHS,
 	"src/data/anime-snapshots/**",
+	"src/data/games-snapshots/**",
 	"**/.gitkeep",
 ]);
 

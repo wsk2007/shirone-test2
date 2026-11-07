@@ -1,0 +1,78 @@
+---
+import type { SignatureConfig } from "@/types/config";
+import { getPostSignature } from "@utils/post-signature";
+import { getRawMarkdownHref } from "@utils/raw-markdown-path";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+
+interface Props {
+	sourceFile?: string;
+	sourceId: string;
+	config: SignatureConfig;
+	class?: string;
+}
+
+const { sourceFile, sourceId, config } = Astro.props;
+const className = Astro.props.class ?? "";
+const signature = await getPostSignature(sourceFile, config);
+if (!signature) return null;
+const shortId = config.keyFingerprint.trim().slice(-8).toUpperCase();
+const sourceHref = sourceFile ? getRawMarkdownHref(sourceId, sourceFile) : "#";
+const title = i18n(I18nKey.postSignedBy).replace("{shortId}", shortId);
+---
+
+<section class:list={["m3-post-signature", className]} aria-label={title}>
+	<h3 class="m3-post-signature__title">{title}</h3>
+	<ul class="m3-post-signature__items">
+		<li><a class="m3-post-signature__source" href={sourceHref} target="_blank" rel="noopener noreferrer">{i18n(I18nKey.rawMarkdown)}</a></li>
+		<li>
+			<details class="m3-post-signature__details">
+				<summary class="m3-post-signature__summary">{i18n(I18nKey.postSignature)}</summary>
+				<pre class="m3-post-signature__code"><code>{signature}</code></pre>
+			</details>
+		</li>
+	</ul>
+</section>
+
+<style lang="stylus">
+.m3-post-signature
+	border-radius: var(--shape-corner-m)
+	background: var(--surface-container-low)
+	padding: var(--m3e-space-4) var(--m3e-space-6)
+	color: var(--on-surface)
+
+	&__title
+		margin: 0
+		font: var(--m3e-type-title-medium)
+		font-weight: 600
+
+	&__items
+		margin: var(--m3e-space-3) 0 0
+		padding-inline-start: var(--m3e-space-6)
+		font: var(--m3e-type-body-medium)
+		color: var(--on-surface-variant)
+
+	&__source
+		color: var(--primary)
+		text-decoration: none
+		&:hover
+			text-decoration: underline
+
+	&__details
+		color: var(--on-surface)
+
+	&__summary
+		font: var(--m3e-type-body-medium)
+		cursor: pointer
+
+	&__code
+		max-height: 24rem
+		overflow: auto
+		margin: var(--m3e-space-3) 0 0
+		border-radius: var(--shape-corner-s)
+		background: var(--surface-container-high)
+		padding: var(--m3e-space-4)
+		font: var(--m3e-type-code)
+		white-space: pre-wrap
+		word-break: break-all
+</style>

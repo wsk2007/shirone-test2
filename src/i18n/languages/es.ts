@@ -344,6 +344,9 @@ export const es: Translation = {
 	[Key.feedHowToUseDesc]:
 		"Añade esta URL a tu lector RSS/Atom favorito (como NetNewsWire, Feedly, Inoreader o Follow) para recibir actualizaciones.",
 	[Key.feedOpenXml]: "Ver XML original",
+	[Key.postSignature]: "Firma",
+	[Key.postSignedBy]: "Firmado por {shortId}",
+	[Key.rawMarkdown]: "Markdown sin procesar",
 	[Key.feedRecentPosts]: "Artículos recientes del canal",
 	[Key.menu]: "Menú",
 	[Key.mainNavigation]: "Navegación principal",

@@ -48,6 +48,10 @@ export {
 	resolveImageBloomOptions,
 } from "./imageBloomConfig";
 export { licenseConfig } from "./licenseConfig";
+export {
+	live2dConfig,
+	resolveLive2DOptions,
+} from "./live2dConfig";
 export { llmsConfig } from "./llmsConfig";
 export { momentsConfig } from "./momentsConfig";
 export {
@@ -62,6 +66,7 @@ export { POST_CARD_MIN_WIDTH, postListConfig } from "./postListConfig";
 export { profileConfig } from "./profileConfig";
 export { projectsConfig } from "./projectsConfig";
 export { seriesConfig } from "./seriesConfig";
+export { signatureConfig } from "./signatureConfig";
 export { sidebarConfig } from "./sidebarConfig";
 export {
 	getDefaultSpec,

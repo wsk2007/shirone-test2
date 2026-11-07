@@ -341,6 +341,9 @@ export const ja: Translation = {
 	[Key.feedHowToUseDesc]:
 		"上記の購読 URL をお好みの RSS/Atom リーダー（NetNewsWire、Feedly、Inoreader、Follow など）に登録すると、最新記事が通知されます。",
 	[Key.feedOpenXml]: "XML を直接表示",
+	[Key.postSignature]: "署名",
+	[Key.postSignedBy]: "署名者: {shortId}",
+	[Key.rawMarkdown]: "元の Markdown",
 	[Key.feedRecentPosts]: "最新の配信記事",
 	[Key.menu]: "メニュー",
 	[Key.mainNavigation]: "メインナビゲーション",

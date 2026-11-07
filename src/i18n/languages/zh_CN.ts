@@ -330,6 +330,9 @@ export const zh_CN: Translation = {
 	[Key.feedHowToUseDesc]:
 		"将上方订阅地址添加到任意 RSS/Atom 阅读器（如 NetNewsWire、Feedly、Inoreader、Follow 等），即可即时接收新文章推送。",
 	[Key.feedOpenXml]: "查看原始 XML",
+	[Key.postSignature]: "签名",
+	[Key.postSignedBy]: "签名者：{shortId}",
+	[Key.rawMarkdown]: "原始 Markdown",
 	[Key.feedRecentPosts]: "最新推送文章",
 	[Key.menu]: "菜单",
 	[Key.mainNavigation]: "主导航",

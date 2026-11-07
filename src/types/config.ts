@@ -159,6 +159,15 @@ export type LicenseConfig = {
 	url: string;
 };
 
+export type SignatureConfig = {
+	/** Enable build-time detached GPG signatures for every post. */
+	enable: boolean;
+	/** Full fingerprint of the signing key. */
+	keyFingerprint: string;
+	/** GnuPG home directory; relative paths resolve from the project root. */
+	gpgHome: string;
+};
+
 /** 单篇文章 frontmatter 的版权覆写；省略字段回退到全站 licenseConfig。 */
 export type LicenseOverride = Partial<LicenseConfig> & {
 	/** 作者名，或带链接的作者对象；缺省回退到 profileConfig.name。 */

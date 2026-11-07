@@ -50,6 +50,12 @@ export const CONFIG_DOMAINS = Object.freeze([
 		module: "@/types/config",
 	},
 	{
+		key: "signature",
+		file: "signature",
+		type: "SignatureConfig",
+		module: "@/types/config",
+	},
+	{
 		key: "expressiveCode",
 		file: "expressive-code",
 		type: "ExpressiveCodeConfig",
@@ -157,6 +163,12 @@ export const CONFIG_DOMAINS = Object.freeze([
 		file: "llms",
 		type: "LlmsConfig",
 		module: "@/types/llmsConfig",
+	},
+	{
+		key: "live2d",
+		file: "live2d",
+		type: "Live2DConfig",
+		module: "@/types/live2dConfig",
 	},
 	{
 		key: "umami",

@@ -9,6 +9,21 @@
 
 import type { PageMeta } from "./pageMeta.ts";
 
+export type GamesSourceKind = "local" | "snapshot";
+export type GamesFallbackKind = "local" | "empty";
+
+export interface GamesRequestOptions {
+	pageSize?: number;
+	maxItems?: number;
+	minDelayMs?: number;
+}
+
+export interface BangumiGamesProviderConfig {
+	enable: boolean;
+	userId: string;
+	request?: GamesRequestOptions;
+}
+
 /** 游玩状态 */
 export type GameStatus = "playing" | "completed" | "backlog" | "wishlist";
 
@@ -72,4 +87,19 @@ export interface GamesConfig extends PageMeta {
 	disabledKeys?: string[];
 	/** 可选自定义数据（向后兼容；默认读取 src/data/games.ts）。 */
 	items?: GameItem[];
+	/** 游戏数据源；默认 local，Bangumi 使用构建期快照。 */
+	source?: {
+		kind: GamesSourceKind;
+		provider?: "bangumi";
+		file?: string;
+		fetchOnDev?: boolean;
+	};
+	/** 快照缺失或无效时的安全回退。 */
+	fallback?: { kind: GamesFallbackKind };
+	providers?: { bangumi: BangumiGamesProviderConfig };
+	snapshot?: {
+		directory: string;
+		staleAfterDays?: number;
+		keepLastValid: boolean;
+	};
 }

@@ -68,6 +68,7 @@
 |---|---|
 | `ButtonLink` / `ButtonTag` | 链接/标签形态的按钮（atoms 组合） |
 | `PostMeta` | 文章元信息（日期/分类/标签） |
+| `PostSignature` | 可选的构建期 GPG 分离签名展示（原文签名由文章路由与签名工具传入配置） |
 | `FriendCard` | 友链卡片（头像 + 站名 + 描述 + 标签，整卡链接） |
 | `MomentCard` | 动态卡片（`<article>` 语义：头像/作者/时间/置顶/心情/正文/位置/标签） |
 | `MomentGallery` | 动态图片画廊（两段式：自适应网格瓦片 → 内联查看器主舞台/缩略图条/键盘导航 → Fancybox 灯箱） |

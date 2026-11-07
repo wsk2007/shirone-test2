@@ -47,6 +47,7 @@ themeColor:
 | `article.yaml` | `articleConfig` 文章正文与阅读设置 | `anime.yaml` | `animeConfig` 番剧追番 |
 | `comment.yaml` | `commentConfig` 评论系统 | `font.yaml` | `fontConfig` 字体与字号 |
 | `announcement.yaml` | `announcementConfig` 全站公告 | `license.yaml` | `licenseConfig` 版权协议 |
+| `signature.yaml` | `signatureConfig` 文章原始 Markdown 的构建期 GPG 签名 |  |  |
 | `fab.yaml` | `fabConfig` 浮动操作按钮 | `image-bloom.yaml` | `imageBloomConfig` 图片光晕特效 |
 | `footer.yaml` | `footerConfig` 页脚基本信息 | `expressive-code.yaml` | `expressiveCodeConfig` 代码高亮设置 |
 | `llms.yaml` | `llmsConfig` 大模型索引与全文输出 | `umami.yaml` | `umamiConfig` Umami 网站统计 |
@@ -61,6 +62,18 @@ themeColor:
 `config/umami.yaml` 的 `websiteId` 与 `scriptUrl` 是可选的成对字段。省略两者时，`enable` 与 `shareUrl` 仍会启用公开统计读取；只有需要向 Umami 上报访问时才同时填写两者，单独填写任一字段不会加载采集脚本。
 
 `config/comment.yaml` 通过 `provider` 在 Twikoo、Giscus 与 Waline 之间三选一。选择 Giscus（基于 GitHub Discussions）时需同时填写 `giscus.repo`、`giscus.repoId` 与 `giscus.categoryId` 三个必填字段（从 giscus.app 配置生成器获取）；任一必填缺失时 `resolveCommentOptions()` 返回 `null`，评论区静默关闭、零额外负担。`giscus.theme` 是明暗双值对象，可以只覆盖 `dark` 一侧，另一侧沿用主题默认值（嵌套对象递归合并）。
+
+### 文章原文 GPG 签名 (`config/signature.yaml`)
+
+签名默认关闭。启用后构建机必须安装 `gpg`，并在专用 GPG home 中持有匹配指纹的签名私钥：
+
+```yaml
+enable: true
+keyFingerprint: "0123456789ABCDEF0123456789ABCDEF01234567"
+gpgHome: "/run/secrets/blog-signing-gnupg"
+```
+
+`gpgHome` 相对路径按项目根目录解析。文章页显示 ASCII armor 分离签名，输入是原始 Markdown 文件字节（目录文章的 `index.md`，单文件文章本身）。签名缓存位于 `.astro/gpg-signatures/`，按正文、指纹和 GPG home 路径寻址；正文或密钥配置变化会生成新签名。私钥不应放进内容仓或发布产物。
 
 ### 自定义页脚注入 (`config/footer.html`)
 

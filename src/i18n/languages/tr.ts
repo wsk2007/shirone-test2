@@ -345,6 +345,9 @@ export const tr: Translation = {
 	[Key.feedHowToUseDesc]:
 		"Yeni yazı bildirimleri almak için yukarıdaki bağlantıyı dilediğiniz RSS/Atom okuyucusuna (NetNewsWire, Feedly, Inoreader, Follow vb.) ekleyin.",
 	[Key.feedOpenXml]: "Ham XML'i Görüntüle",
+	[Key.postSignature]: "İmza",
+	[Key.postSignedBy]: "{shortId} tarafından imzalandı",
+	[Key.rawMarkdown]: "Ham Markdown",
 	[Key.feedRecentPosts]: "Akıştaki Son Yazılar",
 	[Key.menu]: "Menü",
 	[Key.mainNavigation]: "Ana gezinme",

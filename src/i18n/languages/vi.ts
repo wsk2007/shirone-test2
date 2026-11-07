@@ -344,6 +344,9 @@ export const vi: Translation = {
 	[Key.feedHowToUseDesc]:
 		"Thêm URL nguồn cấp ở trên vào trình đọc RSS/Atom yêu thích của bạn (như NetNewsWire, Feedly, Inoreader, Follow) để nhận thông báo bài viết mới.",
 	[Key.feedOpenXml]: "Xem XML gốc",
+	[Key.postSignature]: "Chữ ký",
+	[Key.postSignedBy]: "Được ký bởi {shortId}",
+	[Key.rawMarkdown]: "Markdown gốc",
 	[Key.feedRecentPosts]: "Bài viết mới nhất trong nguồn cấp",
 	[Key.menu]: "Menu",
 	[Key.mainNavigation]: "Điều hướng chính",

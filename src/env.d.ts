@@ -23,3 +23,11 @@ declare module "*scripts/anime/providers/bilibili.mjs" {
 		rawItems: unknown[];
 	}>;
 }
+
+declare module "*scripts/games/providers/bangumi.mjs" {
+	export function fetchBangumiGamesData(config: unknown): Promise<{
+		provider: "bangumi";
+		accountRef: string;
+		rawItems: unknown[];
+	}>;
+}

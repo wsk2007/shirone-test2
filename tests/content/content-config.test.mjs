@@ -103,11 +103,13 @@ describe("读取内容仓配置", () => {
 	it("接受 .yml 后缀", () => {
 		const { base, directory } = createConfigDirectory({
 			"license.yml": "enable: false\n",
+			"signature.yaml": "enable: true\nkeyFingerprint: 0123456789012345678901234567890123456789\n",
 		});
 		try {
 			const entries = readConfigOverrides(directory);
-			assert.equal(entries.length, 1);
+			assert.equal(entries.length, 2);
 			assert.equal(entries[0].domain.key, "license");
+			assert.equal(entries[1].domain.key, "signature");
 		} finally {
 			rmSync(base, { recursive: true, force: true });
 		}
