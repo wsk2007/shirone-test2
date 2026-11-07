@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      patch-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+    pull-request-branch-name:
+      separator: "-"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # rehype-katex@7 declares katex ^0.16, but the pnpm override in
+      # pnpm-workspace.yaml deliberately resolves 0.18.x so the renderer and
+      # page CSS share one version. A 0.19 bump stays blocked until an upstream
+      # renderer release declares support.
+      - dependency-name: "katex"
+        update-types: ["version-update:semver-minor"]
+      # 0.18.11 was published with accidental breaking changes and is deprecated.
+      - dependency-name: "katex"
+        versions: ["0.18.11"]
