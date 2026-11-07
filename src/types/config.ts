@@ -113,6 +113,8 @@ export type SiteConfig = {
 	};
 	wallpaperMode: {
 		defaultMode: WallpaperMode;
+		/** 横幅滚出视口后将横幅图片作为半透明模糊页面底图；仅 `banner` 模式生效，未配置时关闭。 */
+		transparentOverlay?: boolean;
 	};
 	/** 页面背景纹理系统配置，支持布尔值直接开关或详细配置对象 */
 	texture?: boolean | TextureConfig;

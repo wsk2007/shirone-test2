@@ -43,6 +43,7 @@ export const siteConfig: SiteConfig = withUserConfig("site", {
 	// 访客在“显示设置”中的选择会保存在浏览器中，并覆盖这里的默认值。
 	wallpaperMode: {
 		defaultMode: "banner",
+		transparentOverlay: true, // 横幅滚出视口后以半透明模糊页面显现横幅底图；solid/none 模式下始终禁用。
 	},
 	// 页面背景纹理系统配置（5 大精美预设 + 零开销 HCT 动态取色）
 	texture: {

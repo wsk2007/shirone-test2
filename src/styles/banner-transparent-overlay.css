@@ -1,0 +1,121 @@
+/* Opt-in wallpaper overlay. The blur is intentionally scoped to this feature. */
+:root {
+	--banner-overlay-blur: 12px;
+	--banner-overlay-reveal-duration: 2500ms; /* Intentional crossfade between page surface and wallpaper. */
+	--banner-overlay-exit-duration: 1400ms; /* Leaves frame time while keeping the full return within three seconds. */
+}
+
+/* Keep the normal page surface as the wallpaper's backing layer during both fades. */
+html[data-banner-overlay-configured="true"] {
+	background-color: var(--page-bg);
+}
+
+html[data-banner-overlay-configured="true"] body {
+	transition: background-color var(--banner-overlay-reveal-duration) var(--m3e-easing-standard);
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"] {
+	background-color: transparent;
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"][data-banner-overlay-exiting="true"] {
+	background-color: var(--page-bg);
+	transition-duration: var(--banner-overlay-exit-duration);
+}
+
+html[data-banner-overlay-configured="true"] #banner-wrapper {
+	transition: opacity var(--banner-overlay-reveal-duration) var(--m3e-easing-standard);
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"] #banner-wrapper {
+	position: fixed;
+	inset: 0;
+	z-index: -3;
+	height: 100vh;
+	min-height: 100vh;
+	pointer-events: none;
+	opacity: 1;
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"][data-banner-overlay-exiting="true"] #banner-wrapper {
+	opacity: 0;
+	transition-duration: var(--banner-overlay-exit-duration);
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-restoring="true"] #banner-wrapper {
+	transition-duration: var(--banner-overlay-exit-duration);
+}
+
+#banner-wallpaper-blur {
+	position: fixed;
+	inset: 0;
+	z-index: -2;
+	background-color: transparent;
+	opacity: 0;
+	backdrop-filter: blur(0px);
+	-webkit-backdrop-filter: blur(0px);
+	pointer-events: none;
+	transition:
+		opacity var(--banner-overlay-reveal-duration) var(--m3e-easing-standard),
+		background-color var(--banner-overlay-reveal-duration) var(--m3e-easing-standard),
+		backdrop-filter var(--banner-overlay-reveal-duration) var(--m3e-easing-standard);
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"] #banner-wallpaper-blur {
+	background-color: color-mix(in srgb, var(--page-bg) 8%, transparent);
+	opacity: 1;
+	backdrop-filter: blur(var(--banner-overlay-blur));
+	-webkit-backdrop-filter: blur(var(--banner-overlay-blur));
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"][data-banner-overlay-exiting="true"] #banner-wallpaper-blur {
+	background-color: transparent;
+	opacity: 0;
+	backdrop-filter: blur(0px);
+	-webkit-backdrop-filter: blur(0px);
+	transition-duration: var(--banner-overlay-exit-duration);
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"] #m3e-texture-canvas {
+	z-index: -1;
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"] :is(
+	.sidebar-widget > *,
+	.m3-blog-postcard,
+	.m3-card,
+	.moment-card,
+	.friend-card,
+	.skill-card,
+	.project-card,
+	.album-card,
+	.game-card,
+	.anime-card,
+	.m3-license-card
+) {
+	background-color: color-mix(in srgb, var(--card-bg) 76%, transparent);
+	backdrop-filter: blur(var(--banner-overlay-blur));
+	-webkit-backdrop-filter: blur(var(--banner-overlay-blur));
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"] .top-app-bar {
+	background-color: color-mix(in srgb, var(--surface) 76%, transparent);
+	backdrop-filter: blur(var(--banner-overlay-blur));
+	-webkit-backdrop-filter: blur(var(--banner-overlay-blur));
+}
+
+html[data-banner-overlay-configured="true"] body[data-banner-overlay-active="true"] #floating-controls .m3-fab {
+	background-color: color-mix(in srgb, var(--primary-container) 78%, transparent);
+	backdrop-filter: blur(var(--banner-overlay-blur));
+	-webkit-backdrop-filter: blur(var(--banner-overlay-blur));
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html[data-banner-overlay-configured="true"],
+	html[data-banner-overlay-configured="true"] body,
+	html[data-banner-overlay-configured="true"] #banner-wrapper,
+	html[data-banner-overlay-configured="true"] body[data-banner-overlay-restoring="true"] #banner-wrapper,
+	#banner-wallpaper-blur {
+		transition-duration: 0.01ms;
+	}
+}

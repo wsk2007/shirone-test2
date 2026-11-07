@@ -39,6 +39,7 @@ import { resolvePageWidth } from "../utils/responsive-utils";
 import "../styles/main.css";
 import "../styles/font-faces.css";
 import textureStyles from "../styles/textures.css?raw";
+import bannerOverlayStyles from "../styles/banner-transparent-overlay.css?raw";
 
 interface Props {
 	title?: string;
@@ -89,6 +90,7 @@ const lightTheme =
 	expressiveCodeConfig.lightTheme ?? expressiveCodeConfig.theme;
 const darkTheme = expressiveCodeConfig.darkTheme ?? expressiveCodeConfig.theme;
 const defaultWallpaperMode = siteConfig.wallpaperMode.defaultMode;
+const transparentBannerOverlay = siteConfig.wallpaperMode.transparentOverlay ?? false;
 const textureOptions = resolveTextureOptions();
 const defaultTexturePreset = textureOptions.defaultPreset;
 const defaultTextureOpacity = textureOptions.defaultOpacity;
@@ -151,6 +153,7 @@ const defaultSchemeStyle = createDefaultSchemeStyle();
 		<style is:inline set:html={defaultSchemeStyle}></style>
 		{fontRoleStyle && <style is:inline set:html={fontRoleStyle}></style>}
 		{textureEnabled && <style is:inline set:html={textureStyles}></style>}
+		{transparentBannerOverlay && <style is:inline set:html={bannerOverlayStyles}></style>}
 		{configuredFontRoles.map((role) => (
 			<Font
 				cssVariable={resolvedFontOptions.roles[role].cssVariable as never}
@@ -168,7 +171,7 @@ const defaultSchemeStyle = createDefaultSchemeStyle();
 			/>
 		))}
 
-		<script is:inline define:vars={{DEFAULT_THEME, LIGHT_MODE, DARK_MODE, AUTO_MODE, BANNER_HEIGHT_EXTEND, configHue, lightTheme, darkTheme, defaultWallpaperMode, defaultTexturePreset, defaultTextureOpacity, textureEnabled}}>
+		<script is:inline define:vars={{DEFAULT_THEME, LIGHT_MODE, DARK_MODE, AUTO_MODE, BANNER_HEIGHT_EXTEND, configHue, lightTheme, darkTheme, defaultWallpaperMode, defaultTexturePreset, defaultTextureOpacity, textureEnabled, transparentBannerOverlay}}>
 			const theme = localStorage.getItem('theme') || DEFAULT_THEME;
 			let isDark = false;
 			switch (theme) {
@@ -199,6 +202,9 @@ const defaultSchemeStyle = createDefaultSchemeStyle();
 				? storedWallpaperMode
 				: defaultWallpaperMode;
 			document.documentElement.dataset.wallpaperMode = wallpaperMode;
+			if (transparentBannerOverlay) {
+				document.documentElement.dataset.bannerOverlayConfigured = 'true';
+			}
 
 			if (textureEnabled) {
 				const storedTexturePreset = localStorage.getItem('texture-preset');
@@ -244,6 +250,9 @@ const defaultSchemeStyle = createDefaultSchemeStyle();
 				class="fixed inset-0 pointer-events-none -z-20 transition-opacity duration-500"
 				aria-hidden="true"
 			></div>
+		)}
+		{transparentBannerOverlay && (
+			<div id="banner-wallpaper-blur" aria-hidden="true"></div>
 		)}
 		<Snackbar client:only="svelte"></Snackbar>
 		{live2dOptions && Live2D && (
@@ -363,6 +372,72 @@ if (window.swup?.hooks) setup();
 else document.addEventListener('swup:enable', setup, { once: true });
 
 const backToTopBtn = document.getElementById('back-to-top-btn');
+let bannerWallpaperAnimation;
+let bannerWallpaperExitTimer;
+let bannerWallpaperRestoreTimer;
+const getBannerWallpaperDuration = () => {
+	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
+	const value = getComputedStyle(document.documentElement)
+		.getPropertyValue('--banner-overlay-reveal-duration')
+		.trim();
+	return Number.parseFloat(value) || 2500;
+};
+const getBannerWallpaperExitDuration = () => {
+	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
+	const value = getComputedStyle(document.documentElement)
+		.getPropertyValue('--banner-overlay-exit-duration')
+		.trim();
+	return Number.parseFloat(value) || 1500;
+};
+const clearBannerWallpaperOverlay = (bannerStage) => {
+	window.clearTimeout(bannerWallpaperExitTimer);
+	bannerWallpaperExitTimer = undefined;
+	window.clearTimeout(bannerWallpaperRestoreTimer);
+	bannerWallpaperRestoreTimer = undefined;
+	bannerWallpaperAnimation?.cancel();
+	bannerWallpaperAnimation = undefined;
+	if (bannerStage) {
+		bannerStage.style.removeProperty('opacity');
+		bannerStage.style.removeProperty('transform');
+		bannerStage.style.removeProperty('transform-origin');
+	}
+	delete document.body.dataset.bannerOverlayActive;
+	delete document.body.dataset.bannerOverlayExiting;
+	delete document.body.dataset.bannerOverlayRestoring;
+	delete document.documentElement.dataset.bannerOverlayActive;
+};
+const animateBannerWallpaper = (stage, startOpacity, startTransform) => {
+	if (!stage) return;
+	const currentOpacity = Number.parseFloat(getComputedStyle(stage).opacity);
+	const fromOpacity = startOpacity ?? (Number.isFinite(currentOpacity) ? currentOpacity : 1);
+	const currentTransform = startTransform ?? getComputedStyle(stage).transform;
+	bannerWallpaperAnimation?.cancel();
+	stage.style.opacity = String(fromOpacity);
+	stage.style.transformOrigin = 'top left';
+	if (currentTransform !== 'none') stage.style.transform = currentTransform;
+	else stage.style.removeProperty('transform');
+	const easing = getComputedStyle(document.documentElement)
+		.getPropertyValue('--m3e-easing-standard')
+		.trim() || 'ease';
+	const animation = stage.animate(
+		[
+			{ opacity: fromOpacity, transform: currentTransform },
+			{ opacity: 1, transform: 'none' },
+		],
+		{ duration: getBannerWallpaperDuration(), easing, fill: 'forwards' },
+	);
+	bannerWallpaperAnimation = animation;
+	animation.onfinish = () => {
+		if (bannerWallpaperAnimation !== animation) return;
+		bannerWallpaperAnimation = undefined;
+		stage.style.opacity = '1';
+		stage.style.transform = 'none';
+		animation.cancel();
+		stage.style.removeProperty('opacity');
+		stage.style.removeProperty('transform');
+		stage.style.removeProperty('transform-origin');
+	};
+};
 function scrollFunction() {
 	const scrollTop = Math.max(document.body.scrollTop, document.documentElement.scrollTop);
 	const backToTopThreshold = window.innerHeight * (BANNER_HEIGHT / 100);
@@ -370,9 +445,85 @@ function scrollFunction() {
 	const bannerVisible = document.body.dataset.bannerVisible === 'true';
 	const navbar = document.getElementById('navbar');
 	const bannerStage = document.getElementById('banner-wrapper');
-	const bannerBottom = bannerStage?.getBoundingClientRect().height ?? 0;
+	const overlayConfigured =
+		document.documentElement.dataset.bannerOverlayConfigured === 'true';
+	let bannerBottom = bannerStage?.getBoundingClientRect().height ?? 0;
+	if (overlayConfigured && bannerStage) {
+		if (!bannerStage.dataset.overlayScrollHeight) {
+			bannerStage.dataset.overlayScrollHeight = String(bannerStage.offsetHeight);
+		}
+		bannerBottom = Number(bannerStage.dataset.overlayScrollHeight) || bannerBottom;
+	}
 	const overBanner = bannerVisible && scrollTop < Math.max(0, bannerBottom - 64);
 	document.body.dataset.bannerScrolled = String(!overBanner);
+	if (overlayConfigured) {
+		const bannerWallpaperMode =
+			document.documentElement.dataset.wallpaperMode === 'banner';
+		const overlayActive = bannerWallpaperMode && bannerVisible && !overBanner;
+		const wasOverlayActive =
+			document.body.dataset.bannerOverlayActive === 'true';
+		const isOverlayExiting =
+			document.body.dataset.bannerOverlayExiting === 'true';
+		const isOverlayRestoring =
+			document.body.dataset.bannerOverlayRestoring === 'true';
+		if (overlayActive && bannerStage) {
+			if (!wasOverlayActive || isOverlayExiting || isOverlayRestoring) {
+				const currentOpacity = Number.parseFloat(getComputedStyle(bannerStage).opacity);
+				let startTransform;
+				if (!wasOverlayActive && isOverlayRestoring) {
+					const rect = bannerStage.getBoundingClientRect();
+					const scaleX = rect.width / window.innerWidth;
+					const scaleY = rect.height / window.innerHeight;
+					startTransform = `matrix(${scaleX}, 0, 0, ${scaleY}, ${rect.left}, ${rect.top})`;
+				}
+				const fromOpacity =
+					wasOverlayActive || isOverlayRestoring
+						? (Number.isFinite(currentOpacity) ? currentOpacity : 1)
+						: 0;
+				window.clearTimeout(bannerWallpaperExitTimer);
+				window.clearTimeout(bannerWallpaperRestoreTimer);
+				delete document.body.dataset.bannerOverlayRestoring;
+				delete document.body.dataset.bannerOverlayExiting;
+				bannerStage.style.opacity = String(fromOpacity);
+				document.body.dataset.bannerOverlayActive = 'true';
+				document.documentElement.dataset.bannerOverlayActive = 'true';
+				animateBannerWallpaper(bannerStage, fromOpacity, startTransform);
+			}
+		} else if (wasOverlayActive && bannerWallpaperMode && bannerVisible) {
+			// Fade out the fixed wallpaper first, then fade the restored banner in.
+			if (scrollTop <= 1 && !isOverlayExiting) {
+				const currentOpacity = getComputedStyle(bannerStage).opacity;
+				const currentTransform = getComputedStyle(bannerStage).transform;
+				if (currentTransform !== 'none') bannerStage.style.transform = currentTransform;
+				bannerWallpaperAnimation?.cancel();
+				bannerWallpaperAnimation = undefined;
+				bannerStage.style.opacity = currentOpacity;
+				document.body.dataset.bannerOverlayExiting = 'true';
+				requestAnimationFrame(() => {
+					bannerStage.style.removeProperty('opacity');
+					bannerWallpaperExitTimer = window.setTimeout(() => {
+						if (document.body.dataset.bannerOverlayExiting !== 'true') return;
+						bannerStage.style.opacity = '0';
+						bannerStage.style.removeProperty('transform');
+						bannerStage.style.removeProperty('transform-origin');
+						delete document.body.dataset.bannerOverlayActive;
+						delete document.body.dataset.bannerOverlayExiting;
+						delete document.documentElement.dataset.bannerOverlayActive;
+						document.body.dataset.bannerOverlayRestoring = 'true';
+						requestAnimationFrame(() => bannerStage.style.removeProperty('opacity'));
+						bannerWallpaperRestoreTimer = window.setTimeout(() => {
+							delete document.body.dataset.bannerOverlayRestoring;
+						}, getBannerWallpaperExitDuration());
+					}, getBannerWallpaperExitDuration());
+				});
+			}
+		} else if (
+			wasOverlayActive ||
+			(isOverlayRestoring && (!bannerWallpaperMode || !bannerVisible))
+		) {
+			clearBannerWallpaperOverlay(bannerStage);
+		}
+	}
 	navbar?.classList.toggle('top-app-bar--transparent', overBanner);
 	navbar?.classList.toggle('top-app-bar--scrolled', scrollTop > 16);
 }
@@ -381,6 +532,13 @@ window.addEventListener('resize', () => {
 	let offset = Math.floor(window.innerHeight * (BANNER_HEIGHT_EXTEND / 100));
 	offset = offset - offset % 4;
 	document.documentElement.style.setProperty('--banner-height-extend', `${offset}px`);
+	const bannerStage = document.getElementById('banner-wrapper');
+	if (
+		document.documentElement.dataset.bannerOverlayConfigured === 'true' &&
+		bannerStage
+	) {
+		bannerStage.dataset.overlayScrollHeight = String(bannerStage.offsetHeight);
+	}
 	scrollFunction();
 });
 new MutationObserver(scrollFunction).observe(document.body, { attributes: true, attributeFilter: ['data-banner-visible', 'data-banner-layout'] });
