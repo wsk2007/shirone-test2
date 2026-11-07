@@ -162,12 +162,14 @@ export type LicenseConfig = {
 };
 
 export type SignatureConfig = {
-	/** Enable build-time detached GPG signatures for every post. */
+	/** Display detached signatures for posts. */
 	enable: boolean;
-	/** Full fingerprint of the signing key. */
+	/** Public fingerprint used to identify the signing key. */
 	keyFingerprint: string;
-	/** GnuPG home directory; relative paths resolve from the project root. */
+	/** Local GnuPG home used only by `pnpm posts:sign`; build jobs do not read it. */
 	gpgHome: string;
+	/** Project-relative directory containing the committed signature index; defaults to `post-signatures`. */
+	directory?: string;
 };
 
 /** 单篇文章 frontmatter 的版权覆写；省略字段回退到全站 licenseConfig。 */

@@ -43,6 +43,7 @@
 		"check:markdown-manifest": "node scripts/check-markdown-manifest.mjs",
 		"anime:sync": "node scripts/anime/sync.mjs",
 		"games:sync": "node scripts/games/sync.mjs",
+		"posts:sign": "node scripts/posts/sign.mjs",
 		"fonts:check": "node scripts/fonts/check-fonts.mjs",
 		"fonts:subset": "node scripts/fonts/subset-fonts.mjs",
 		"build": "node scripts/content/sync.mjs && astro build && npx pagefind --site dist && node scripts/fonts/check-fonts.mjs",

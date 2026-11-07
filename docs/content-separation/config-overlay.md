@@ -65,15 +65,16 @@ themeColor:
 
 ### 文章原文 GPG 签名 (`config/signature.yaml`)
 
-签名默认关闭。启用后构建机必须安装 `gpg`，并在专用 GPG home 中持有匹配指纹的签名私钥：
+签名默认关闭。启用后只需在可信本地环境运行 `pnpm posts:sign`；静态构建读取已生成的公开签名索引，不会启动 GPG，也不需要私钥：
 
 ```yaml
 enable: true
 keyFingerprint: "0123456789ABCDEF0123456789ABCDEF01234567"
 gpgHome: "/run/secrets/blog-signing-gnupg"
+directory: "post-signatures"
 ```
 
-`gpgHome` 相对路径按项目根目录解析。文章页显示 ASCII armor 分离签名，输入是原始 Markdown 文件字节（目录文章的 `index.md`，单文件文章本身）。签名缓存位于 `.astro/gpg-signatures/`，按正文、指纹和 GPG home 路径寻址；正文或密钥配置变化会生成新签名。私钥不应放进内容仓或发布产物。
+运行前先用 `pnpm content:sync` 更新外部内容（如适用），再运行 `pnpm posts:sign`。该命令使用配置的本地 GPG home（或 `GNUPGHOME`），签署 `src/content/posts/**/*.md` 与 `*.mdx`，并将签名、正文 SHA-256 和公钥指纹写入项目根目录下 `post-signatures/index.json`。将该索引随代码一并提交和部署；内容变更或签名缺失时构建会提示重新签名。远程构建只读取索引并校验正文哈希，不读取 `gpgHome`，不要求安装 GPG 或提供私钥。私钥应只留在本地签名环境。
 
 ### 自定义页脚注入 (`config/footer.html`)
 

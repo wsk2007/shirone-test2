@@ -1,18 +1,20 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import {
 	chmodSync,
+	mkdirSync,
 	mkdtempSync,
 	rmSync,
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 import { test } from "node:test";
 
 import { getPostSignature } from "../../src/utils/post-signature.ts";
 
-test("creates a verifiable signature in a temporary GPG home and reuses the cache", async (context) => {
+test("reads a stored signature without GPG and rejects stale source content", async (context) => {
 	try {
 		execFileSync("gpg", ["--version"], { stdio: "ignore" });
 	} catch {
@@ -21,8 +23,9 @@ test("creates a verifiable signature in a temporary GPG home and reuses the cach
 	}
 
 	const gpgHome = mkdtempSync(join(tmpdir(), "shirone-gpg-test-"));
+	const projectRoot = mkdtempSync(join(process.cwd(), ".post-signature-test-"));
 	chmodSync(gpgHome, 0o700);
-	const sourceFile = join(gpgHome, "post.md");
+	const sourceFile = join(projectRoot, "post.md");
 	const signatureFile = join(gpgHome, "post.md.asc");
 	try {
 		execFileSync(
@@ -52,10 +55,32 @@ test("creates a verifiable signature in a temporary GPG home and reuses the cach
 			?.split(":")[9];
 		assert.ok(fingerprint, "the generated key has a fingerprint");
 
-		writeFileSync(sourceFile, "---\ntitle: Test\n---\nOriginal markdown.\n");
-		const config = { enable: true, keyFingerprint: fingerprint, gpgHome };
-		const value = await getPostSignature(sourceFile, config);
-		assert.match(value, /BEGIN PGP SIGNATURE/);
+		const markdown = "---\ntitle: Test\n---\nOriginal markdown.\n";
+		writeFileSync(sourceFile, markdown);
+		const value = execFileSync(
+			"gpg",
+			["--homedir", gpgHome, "--batch", "--yes", "--armor", "--detach-sign", "--local-user", fingerprint, "--output", "-", "--"],
+			{ input: markdown, encoding: "utf8" },
+		);
+		const config = {
+			enable: true,
+			keyFingerprint: fingerprint,
+			gpgHome: "",
+			directory: relative(process.cwd(), join(projectRoot, "signatures")),
+		};
+		const sourcePath = relative(process.cwd(), sourceFile).split(sep).join("/");
+		mkdirSync(join(projectRoot, "signatures"), { recursive: true });
+		writeFileSync(join(projectRoot, "signatures", "index.json"), JSON.stringify({
+			schemaVersion: 1,
+			keyFingerprint: fingerprint,
+			posts: {
+				[sourcePath]: {
+					sha256: createHash("sha256").update(markdown).digest("hex"),
+					signature: value,
+				},
+			},
+		}));
+		assert.match(await getPostSignature(sourceFile, config), /BEGIN PGP SIGNATURE/);
 		assert.equal(await getPostSignature(sourceFile, config), value);
 		writeFileSync(signatureFile, value);
 		execFileSync(
@@ -65,10 +90,10 @@ test("creates a verifiable signature in a temporary GPG home and reuses the cach
 		);
 
 		writeFileSync(sourceFile, "---\ntitle: Test\n---\nChanged markdown.\n");
-		const changed = await getPostSignature(sourceFile, config);
-		assert.notEqual(changed, value);
+		await assert.rejects(getPostSignature(sourceFile, config), /missing or stale/);
 	} finally {
 		rmSync(gpgHome, { recursive: true, force: true });
+		rmSync(projectRoot, { recursive: true, force: true });
 	}
 });
 

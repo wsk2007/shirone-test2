@@ -114,7 +114,7 @@ export const siteConfig: SiteConfig = withUserConfig("site", {
 | `siteConfig.ts` | 站点部署 URL / base 路径 / 标题标识 / 语言 / IANA 时区 / HCT 主题色 / 背景纹理系统 / 显示设置浮层开关 / 横幅 / TOC 深度 / 进度条 / favicon（含 `getDefaultStyle` / `getDefaultSpec` / `resolveDisplaySettings` 回退值） |
 | `profileConfig.ts` | 博主资料：头像 / 名称 / 简介 / 社交链接 |
 | `licenseConfig.ts` | 文章版权声明（全站默认；单篇可用 frontmatter `license` 覆写） |
-| `signatureConfig.ts` | 文章原始 Markdown 的构建期 GPG 分离签名（默认关闭；通过 `config/signature.yaml` 配置） |
+| `signatureConfig.ts` | 文章原始 Markdown 的 GPG 分离签名展示；用 `pnpm posts:sign` 在本地生成并提交 `post-signatures/index.json`，远程构建不需要私钥 |
 | `expressiveCodeConfig.ts` | 代码块明暗主题 |
 | `navBarConfig.ts` | 导航栏链接（`LinkPresets` 预设表 + 组装） |
 | `sidebarConfig.ts` | 侧栏编排与 widget 清单（`arrangement` 单/双栏、`side` 主栏物理侧、widget `column` 分栏标签；判别联合类型见 `types/sidebarConfig.ts`；编排指导见 `docs/sidebar-system.md`，组件文档见 `docs/sidebar-widgets.md`，新增 widget checklist 见 `docs/common-components.md` §3.1） |

@@ -1,12 +1,26 @@
-import { createHash, randomUUID } from "node:crypto";
-import { execFileSync } from "node:child_process";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { SignatureConfig } from "@/types/config";
 
 const fingerprintPattern = /^(?:[\da-f]{40}|[\da-f]{64})$/i;
 
-/** Return the detached signature for a post, reusing a content-addressed build cache. */
+export function getPostSignatureIndexPath(
+	projectRoot: string,
+	config: Pick<SignatureConfig, "directory">,
+): string {
+	return path.resolve(projectRoot, config.directory || "post-signatures", "index.json");
+}
+
+function getSourceKey(projectRoot: string, sourceFile: string): string {
+	const relativePath = path.relative(projectRoot, path.resolve(sourceFile));
+	if (relativePath === ".." || relativePath.startsWith(`..${path.sep}`) || path.isAbsolute(relativePath)) {
+		throw new Error(`Post source must be inside the project root: ${sourceFile}`);
+	}
+	return relativePath.split(path.sep).join("/");
+}
+
+/** Read a pre-generated detached signature; builds never invoke GPG or access a private key. */
 export async function getPostSignature(
 	sourceFile: string | undefined,
 	config: SignatureConfig,
@@ -18,63 +32,32 @@ export async function getPostSignature(
 	if (!fingerprintPattern.test(config.keyFingerprint.trim())) {
 		throw new Error("GPG signing requires a full 40- or 64-character hexadecimal key fingerprint.");
 	}
-	if (!config.gpgHome.trim()) {
-		throw new Error("GPG signing requires an explicit gpgHome path.");
-	}
-
+	const projectRoot = process.cwd();
+	const sourcePath = getSourceKey(projectRoot, sourceFile);
 	const markdown = await readFile(sourceFile);
-	const gpgHome = path.resolve(process.cwd(), config.gpgHome);
+	const sourceHash = createHash("sha256").update(markdown).digest("hex");
 	const fingerprint = config.keyFingerprint.trim().toUpperCase();
-	const cacheKey = createHash("sha256")
-		.update(markdown)
-		.update("\0")
-		.update(fingerprint)
-		.update("\0")
-		.update(gpgHome)
-		.digest("hex");
-	const cacheDir = path.resolve(process.cwd(), ".astro", "gpg-signatures");
-	const cacheFile = path.join(cacheDir, `${cacheKey}.asc`);
-
+	const indexFile = getPostSignatureIndexPath(projectRoot, config);
+	let index: {
+		schemaVersion?: number;
+		keyFingerprint?: string;
+		posts?: Record<string, { sha256?: string; signature?: string }>;
+	};
 	try {
-		return await readFile(cacheFile, "utf8");
+		index = JSON.parse(await readFile(indexFile, "utf8"));
 	} catch (error) {
 		if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+		throw new Error(`Post signature index is missing. Run "pnpm posts:sign" locally before building: ${indexFile}`);
 	}
-
-	let signature: string;
-	try {
-		signature = execFileSync(
-			"gpg",
-			[
-				"--homedir",
-				gpgHome,
-				"--batch",
-				"--yes",
-				"--armor",
-				"--detach-sign",
-				"--local-user",
-				fingerprint,
-				"--output",
-				"-",
-				"--",
-			],
-			{ input: markdown, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
-		);
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		const stderr =
-			error && typeof error === "object" && "stderr" in error
-				? (error as { stderr?: Buffer }).stderr
-				: undefined;
-		const detail = stderr ? String(stderr).trim() || message : message;
-		throw new Error(
-			`GPG signing failed for ${sourceFile} with key ${fingerprint}: ${detail}`,
-		);
+	if (index.schemaVersion !== 1) {
+		throw new Error(`Unsupported post signature index version in ${indexFile}. Run "pnpm posts:sign" to regenerate it.`);
 	}
-
-	await mkdir(cacheDir, { recursive: true });
-	const temporaryFile = `${cacheFile}.${process.pid}.${randomUUID()}.tmp`;
-	await writeFile(temporaryFile, signature, { mode: 0o600 });
-	await rename(temporaryFile, cacheFile);
-	return signature;
+	if (index.keyFingerprint?.toUpperCase() !== fingerprint) {
+		throw new Error(`Post signature index uses a different key. Run "pnpm posts:sign" with ${fingerprint}.`);
+	}
+	const record = index.posts?.[sourcePath];
+	if (!record?.signature || record.sha256 !== sourceHash) {
+		throw new Error(`Post signature for ${sourcePath} is missing or stale. Run "pnpm posts:sign" locally before building.`);
+	}
+	return record.signature;
 }
