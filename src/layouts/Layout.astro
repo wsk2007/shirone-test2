@@ -372,9 +372,9 @@ if (window.swup?.hooks) setup();
 else document.addEventListener('swup:enable', setup, { once: true });
 
 const backToTopBtn = document.getElementById('back-to-top-btn');
-let bannerWallpaperAnimation;
-let bannerWallpaperExitTimer;
-let bannerWallpaperRestoreTimer;
+let bannerWallpaperAnimation: Animation | undefined;
+let bannerWallpaperExitTimer: number | undefined;
+let bannerWallpaperRestoreTimer: number | undefined;
 const getBannerWallpaperDuration = () => {
 	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
 	const value = getComputedStyle(document.documentElement)
@@ -389,7 +389,7 @@ const getBannerWallpaperExitDuration = () => {
 		.trim();
 	return Number.parseFloat(value) || 1500;
 };
-const clearBannerWallpaperOverlay = (bannerStage) => {
+const clearBannerWallpaperOverlay = (bannerStage: HTMLElement | null) => {
 	window.clearTimeout(bannerWallpaperExitTimer);
 	bannerWallpaperExitTimer = undefined;
 	window.clearTimeout(bannerWallpaperRestoreTimer);
@@ -406,7 +406,11 @@ const clearBannerWallpaperOverlay = (bannerStage) => {
 	delete document.body.dataset.bannerOverlayRestoring;
 	delete document.documentElement.dataset.bannerOverlayActive;
 };
-const animateBannerWallpaper = (stage, startOpacity, startTransform) => {
+const animateBannerWallpaper = (
+	stage: HTMLElement,
+	startOpacity?: number,
+	startTransform?: string,
+) => {
 	if (!stage) return;
 	const currentOpacity = Number.parseFloat(getComputedStyle(stage).opacity);
 	const fromOpacity = startOpacity ?? (Number.isFinite(currentOpacity) ? currentOpacity : 1);
@@ -469,7 +473,7 @@ function scrollFunction() {
 		if (overlayActive && bannerStage) {
 			if (!wasOverlayActive || isOverlayExiting || isOverlayRestoring) {
 				const currentOpacity = Number.parseFloat(getComputedStyle(bannerStage).opacity);
-				let startTransform;
+				let startTransform: string | undefined;
 				if (!wasOverlayActive && isOverlayRestoring) {
 					const rect = bannerStage.getBoundingClientRect();
 					const scaleX = rect.width / window.innerWidth;
@@ -489,7 +493,7 @@ function scrollFunction() {
 				document.documentElement.dataset.bannerOverlayActive = 'true';
 				animateBannerWallpaper(bannerStage, fromOpacity, startTransform);
 			}
-		} else if (wasOverlayActive && bannerWallpaperMode && bannerVisible) {
+		} else if (wasOverlayActive && bannerWallpaperMode && bannerVisible && bannerStage) {
 			// Fade out the fixed wallpaper first, then fade the restored banner in.
 			if (scrollTop <= 1 && !isOverlayExiting) {
 				const currentOpacity = getComputedStyle(bannerStage).opacity;
